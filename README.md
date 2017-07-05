@@ -1,2 +1,2 @@
-# TiebaManagementTools
+# TiebaTool
 贴吧管理常用接口的整理和管理工具的实现
