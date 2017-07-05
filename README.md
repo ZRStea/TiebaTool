@@ -1,15 +1,17 @@
 # TiebaTool
-##介绍
+## 介绍
 整理了百度贴吧的常用接口，并封装成库。在此基础上实现了一个多线程吧务管理工具，可实现贴吧的回复、楼中楼、用户名的关键词过滤匹配并进行删除或封禁操作。还提供首页的相同标题贴及同一用户发贴量的控制。
 
 ## 使用方法
-*安装依赖 `pip3 install jieba beautifulsoup4`
+* 安装依赖 `pip3 install jieba beautifulsoup4`
 
-*在`config.py`中填入目标贴吧与具有管理权限的账号的贴吧Cookie，并按照说明配置相应参数
+* 在`config.py`中填入目标贴吧与具有管理权限的账号的贴吧Cookie，并按照说明配置相应参数
 
-*执行`python3 run.py`
+* 执行`python3 run.py`
 
-## `tiebalib`库使用说明
+* 错误日志与操作记录分别储存在`error.log`、`operate.log`文件中
+
+## tiebalib库使用说明
 ```
 import tiebalib
 
