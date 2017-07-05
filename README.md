@@ -7,7 +7,7 @@
 
 * 在`config.py`中填入目标贴吧与具有管理权限的账号的贴吧Cookie，并按照说明配置相应参数
 
-* 按照需求按格式在'keywords.py'、'author_keywords.py'中添加关键词。
+* 按照需求按格式在`keywords.py`、`author_keywords.py`中添加关键词。
 
 * 执行`python3 run.py`
 
