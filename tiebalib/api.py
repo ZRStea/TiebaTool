@@ -60,11 +60,11 @@ def get_thread_list(aim_tieba = data.aim_tieba,pn=0):
             tid = re.findall('href="/p/(.*?)"', raw)
             pid = re.findall('&quot;first_post_id&quot;:(.*?),', raw)
             topic = re.findall('href="/p/.*?" title="([\s\S]*?)"', raw)
-            author = re.findall('title="主题作者: (.*?)"', raw)
+            nickname = re.findall('title="主题作者: (.*?)"', raw)
             reply_num = re.findall('&quot;reply_num&quot;:(.*?),',raw)
-            #print(len(tid),len(pid),len(topic),len(author),len(reply_num))
-            if len(tid)==len(pid)==len(topic)==len(author)==len(reply_num):
-                dic = {"tid":tid[0],"pid":pid[0],"topic":topic[0],"author":author[0],"reply_num":reply_num[0]}
+            username = re.findall('''frs-author-name-wrap"><a data-field='{&quot;un&quot;:&quot;(.*?)&quot;}''',raw)
+            if len(tid)==len(pid)==len(topic)==len(username)==len(reply_num):
+                dic = {"tid":tid[0],"pid":pid[0],"topic":topic[0],"author":username[0].encode('utf-8').decode('unicode_escape'),"reply_num":reply_num[0],"nickname":nickname[0]}
                 threads.append(dic)
         if threads == []:
             log.warning("获取首页失败")
