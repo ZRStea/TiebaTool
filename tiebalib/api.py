@@ -50,23 +50,27 @@ def get_fid():
         return 0
 
 def get_thread_list(aim_tieba = data.aim_tieba,pn=0):
-    threads = []
-    payload = {'pn':pn, 'ie':'utf-8'}
-    headers = {'Cookie':data.cookie,'User-Agent':data.UA}
-    content = requests.get('http://tieba.baidu.com/f?kw='+data.aim_tieba,params=payload, headers=headers).text
-    raws = re.findall('thread_list clearfix([\s\S]*?)创建时间"',content)
-    for raw in raws:
-        tid = re.findall('href="/p/(.*?)"', raw)
-        pid = re.findall('&quot;first_post_id&quot;:(.*?),', raw)
-        topic = re.findall('href="/p/.*?" title="([\s\S]*?)"', raw)
-        author = re.findall('title="主题作者: (.*?)"', raw)
-        reply_num = re.findall('&quot;reply_num&quot;:(.*?),',raw)
-        #print(len(tid),len(pid),len(topic),len(author),len(reply_num))
-        if len(tid)==len(pid)==len(topic)==len(author)==len(reply_num):
-            dic = {"tid":tid[0],"pid":pid[0],"topic":topic[0],"author":author[0],"reply_num":reply_num[0]}
-            threads.append(dic)
-    if threads == []:
-        log.warning("获取首页失败")
+    try:
+        threads = []
+        payload = {'pn':pn, 'ie':'utf-8'}
+        headers = {'Cookie':data.cookie,'User-Agent':data.UA}
+        content = requests.get('http://tieba.baidu.com/f?kw='+data.aim_tieba,params=payload, headers=headers).text
+        raws = re.findall('thread_list clearfix([\s\S]*?)创建时间"',content)
+        for raw in raws:
+            tid = re.findall('href="/p/(.*?)"', raw)
+            pid = re.findall('&quot;first_post_id&quot;:(.*?),', raw)
+            topic = re.findall('href="/p/.*?" title="([\s\S]*?)"', raw)
+            author = re.findall('title="主题作者: (.*?)"', raw)
+            reply_num = re.findall('&quot;reply_num&quot;:(.*?),',raw)
+            #print(len(tid),len(pid),len(topic),len(author),len(reply_num))
+            if len(tid)==len(pid)==len(topic)==len(author)==len(reply_num):
+                dic = {"tid":tid[0],"pid":pid[0],"topic":topic[0],"author":author[0],"reply_num":reply_num[0]}
+                threads.append(dic)
+        if threads == []:
+            log.warning("获取首页失败")
+    except Exception:
+        log.exception("Exception Logged")
+        return []
     return threads
 
 def get_post(tid,pn=9999):
