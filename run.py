@@ -85,7 +85,7 @@ def judge_post(post_list):
                     post["result"][0] += 1
                 if dic["block"]:
                     post["result"][1] += 1
-                post["reason"].append("ID关键词："+dic["keyword"])
+                post["reason"].append("ID关键词："+dic["author"])
         if post["level"] < thread_level_limit and post["floor"] == 1:#限定主题作者等级
             post["result"][0] += 1
             post["reason"].append("楼主低于指定等级")
@@ -112,7 +112,7 @@ def judge_comment(comment_list):
                         comment["result"][0] += 1
                     if dic["block"]:
                         comment["result"][1] += 1
-                    comment["reason"].append("ID关键词："+dic["keyword"])
+                    comment["reason"].append("ID关键词："+dic["author"])
     except TypeError:
             logger("TypeError:" + str(comment))
     except Exception as e:
