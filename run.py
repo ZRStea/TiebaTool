@@ -13,6 +13,7 @@ import jieba
 def judge_thread(thread_list):
     for thread in thread_list:
         thread["result"] = [0,0]
+        thread["reason"] = []
 #------处理首页相同作者贴子情况------------------
     author_counting = {}
     author_list = []
@@ -32,6 +33,7 @@ def judge_thread(thread_list):
             temp_thread_list.sort(key=lambda x:int(x["reply_num"]))
             for thread in temp_thread_list[:same_author_limit[1]]:
                 thread["result"][0] += 1
+                thread["reason"].append("超过同用户发贴数限制")
         else:
             logger.warning("首页出现了一次抓取错误，用户名均为'----'")
 #----------处理首页贴子标题撞车---------------------
@@ -48,6 +50,8 @@ def judge_thread(thread_list):
         if simi_rate > 0.8 and same_topic_limit:
             min_reply_thread = min(thread1,thread2,key = lambda p:p["reply_num"])
             min_reply_thread["result"][0] += 1
+            min_reply_thread["reason"].append("首页标题撞车")
+#-----------------------------------------------       
     for thread in thread_list:
         for dic in keywords:
             if re.search(dic["keyword"],thread["topic"]) and dic["topic"]:
@@ -55,50 +59,60 @@ def judge_thread(thread_list):
                     thread["result"][0] += 1
                 if dic["block"]:
                     thread["result"][1] += 1
+                thread["reason"].append("关键词："+dic["keyword"])
         for dic in author_keywords:
             if re.search(dic["author"],thread["author"]):
                 if dic["delete"]:
                     thread["result"][0] += 1
                 if dic["block"]:
                     thread["result"][1] += 1
+                thread["reason"].append("ID关键词："+dic["author"])
     return thread_list
 def judge_post(post_list):
     for post in post_list:
         post["result"] = [0,0]
+        post["reason"] = []
         for dic in keywords:
             if re.search(dic["keyword"],post["text"]) and dic["post"]:
                 if dic["delete"]:
                     post["result"][0] += 1
                 if dic["block"]:
                     post["result"][1] += 1
+                post["reason"].append("关键词："+dic["keyword"])
         for dic in author_keywords:
             if re.search(dic["author"],post["author"]):
                 if dic["delete"]:
                     post["result"][0] += 1
                 if dic["block"]:
                     post["result"][1] += 1
+                post["reason"].append("ID关键词："+dic["keyword"])
         if post["level"] < thread_level_limit and post["floor"] == 1:#限定主题作者等级
             post["result"][0] += 1
+            post["reason"].append("楼主低于指定等级")
         if len(post["smiley"]) > smiley_limit:
             post["result"][0] += 1
             post["result"][1] += 1
+            post["reason"].append("表情数量超出限制")
     return post_list
 def judge_comment(comment_list):
     try:
         for comment in comment_list:
             comment["result"] = [0,0]
+            comment["reason"] = []
             for dic in keywords:
                 if re.search(dic["keyword"],comment["text"]) and dic["post"]:
                     if dic["delete"]:
                         comment["result"][0] += 1
                     if dic["block"]:
                         comment["result"][1] += 1
+                    comment["reason"].append("关键词："+dic["keyword"])
             for dic in author_keywords:
                 if re.search(dic["author"],comment["user_name"]):
                     if dic["delete"]:
                         comment["result"][0] += 1
                     if dic["block"]:
                         comment["result"][1] += 1
+                    comment["reason"].append("ID关键词："+dic["keyword"])
     except TypeError:
             logger("TypeError:" + str(comment))
     except Exception as e:
@@ -139,7 +153,7 @@ def thread_handler(thread_list):
             if thread["result"][0]:
                 status = tiebalib.delete_thread(thread["tid"])
                 if status["no"] == 0:
-                    logger.info("删除主题："+thread["topic"]+"  作者："+thread["author"])
+                    logger.info(' '.join(thread["reason"])+" 删除主题："+thread["topic"]+"  作者："+thread["author"])
                     is_succeed.append(thread["pid"])
                 else:
                     logger.info(str(status) + " 删除主题失败 " + str(thread))
@@ -147,7 +161,7 @@ def thread_handler(thread_list):
             if thread["result"][1]:
                 status = tiebalib.blockid(thread["pid"], thread["author"])
                 if status['errno'] == 0:
-                    logger.info("封禁主题："+thread["topic"]+"  作者："+thread["author"])
+                    logger.info(' '.join(thread["reason"])+" 封禁主题："+thread["topic"]+"  作者："+thread["author"])
                     is_succeed.append(thread["pid"])
                 else:
                     logger.info(str(status) + " 封禁主题失败 " + str(thread))
@@ -162,7 +176,7 @@ def post_handler():
                     if post["floor"] == 1:
                         status = tiebalib.delete_thread(post["tid"])
                         if status["no"] == 0:
-                            logger.info("删除主题："+post["text"]+"  作者："+post["author"])
+                            logger.info(' '.join(post["reason"])+" 删除主题："+post["text"]+"  作者："+post["author"])
                             is_succeed.append(post["pid"])
                         else:
                             logger.info(str(status)+" 删除主题失败 "+str(post))
@@ -170,7 +184,7 @@ def post_handler():
                     else:
                         status = tiebalib.delete_post(post["tid"], post["pid"])
                         if status["no"] == 0:
-                            logger.info("删除回复："+post["text"]+"  作者："+post["author"])
+                            logger.info(' '.join(post["reason"])+" 删除回复："+post["text"]+"  作者："+post["author"])
                             is_succeed.append(post["pid"])
                         else:
                             logger.info(str(status)+" 删除回复失败 " + str(post))
@@ -178,7 +192,7 @@ def post_handler():
                 if post["result"][1]:
                     status = tiebalib.blockid(post["pid"], post["author"])
                     if status['errno'] == 0:
-                        logger.info("封禁回复："+post["text"]+"  作者："+post["author"])
+                        logger.info(' '.join(post["reason"])+" 封禁回复："+post["text"]+"  作者："+post["author"])
                         is_succeed.append(post["pid"])
                     else:
                         logger.info(str(status)+" 封禁回复失败 "+str(post))
@@ -192,13 +206,13 @@ def comment_handler():
                 status = tiebalib.delete_comment(comment["tid"], comment["spid"])
                 if status["no"] == 0:
                     comment_num[comment["pid"]] -= 1
-                    logger.info("删除楼中楼："+comment["text"]+"  作者："+comment["user_name"])
+                    logger.info(' '.join(comment["reason"])+" 删除楼中楼："+comment["text"]+"  作者："+comment["user_name"])
                 else:
                     logger.info(str(status)+" 删除楼中楼失败 "+str(comment))
             if comment["result"][1]:
                 status = tiebalib.blockid(comment["pid"], comment["user_name"])
                 if status['errno'] == 0:
-                    logger.info("封禁楼中楼："+comment["text"]+"  作者："+comment["user_name"])
+                    logger.info(' '.join(comment["reason"])+" 封禁楼中楼："+comment["text"]+"  作者："+comment["user_name"])
                 else:
                     logger.info(str(status)+" 封禁楼中楼失败 "+str(comment))
 def calculate_similarity(text1,text2):
@@ -300,8 +314,3 @@ while True:
     for work_thread in work_thread_list:
         if not work_thread.isAlive():
             work_thread.start()
-
-
-
-
-
