@@ -79,6 +79,9 @@ def judge_post(post_list):
                     post["result"][1] += 1
         if post["level"] < thread_level_limit and post["floor"] == 1:#限定主题作者等级
             post["result"][0] += 1
+        if len(post["smiley"]) > smiley_limit:
+            post["result"][0] += 1
+            post["result"][1] += 1
     return post_list
 def judge_comment(comment_list):
     try:
