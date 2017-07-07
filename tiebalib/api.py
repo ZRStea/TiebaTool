@@ -57,7 +57,7 @@ def get_thread_list(aim_tieba = data.aim_tieba,pn=0):
         content = requests.get('http://tieba.baidu.com/f?kw='+data.aim_tieba,params=payload, headers=headers).text
         raws = re.findall('thread_list clearfix([\s\S]*?)创建时间"',content)
         for raw in raws:
-            tid = re.findall('href="/p/(.*?)"', raw)
+            tid = re.findall('href="/p/(\d*)', raw)
             pid = re.findall('&quot;first_post_id&quot;:(.*?),', raw)
             topic = re.findall('href="/p/.*?" title="([\s\S]*?)"', raw)
             nickname = re.findall('title="主题作者: (.*?)"', raw)
