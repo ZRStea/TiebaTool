@@ -281,15 +281,15 @@ comments_queue = queue.Queue()
 
 #爬贴子线程
 for i in range(threading_num):
-    ps = threading.Thread(target=post_spider,args=())
+    ps = threading.Thread(target=post_spider,args=(),name="post_spider")
     work_thread_list.append(ps)
 #爬第一页楼中楼线程
 for i in range(threading_num):
-    cs = threading.Thread(target=comment_spider,args=())
+    cs = threading.Thread(target=comment_spider,args=(),name="comment_spider")
     work_thread_list.append(cs)
 #楼中楼处理线程
-ph = threading.Thread(target=post_handler,args=())
-ch = threading.Thread(target=comment_handler,args=())
+ph = threading.Thread(target=post_handler,args=(),name="post_handler")
+ch = threading.Thread(target=comment_handler,args=(),name="comment_handler")
 work_thread_list.append(ph)
 work_thread_list.append(ch)
 #启动全部工作线程
@@ -310,7 +310,9 @@ while True:
 
     time.sleep(100/threading_num)
     cycle += 1
-    #唤起退出进程
-    for work_thread in work_thread_list:
+    #重启退出进程
+    for index, work_thread in enumerate(work_thread_list):
         if not work_thread.isAlive():
-            work_thread.start()
+            new_thread = threading.Thread(target=work_thread.name,args=(),name=work_thread.name)
+            work_thread_list[index] = new_thread
+            new_thread.start()
