@@ -313,6 +313,6 @@ while True:
     #重启退出进程
     for index, work_thread in enumerate(work_thread_list):
         if not work_thread.isAlive():
-            new_thread = threading.Thread(target=work_thread.name,args=(),name=work_thread.name)
+            new_thread = threading.Thread(target=locals()[work_thread.name],args=(),name=work_thread.name)
             work_thread_list[index] = new_thread
             new_thread.start()
