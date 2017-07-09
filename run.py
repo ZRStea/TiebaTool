@@ -118,6 +118,14 @@ def judge_comment(comment_list):
     except Exception as e:
             logger("Error:" + str(comment) + str(e))
     return comment_list
+def thread_spider():
+    while True:
+        thread_list = tiebalib.get_thread_list(aim_tieba)#爬取首页贴子列表
+        thread_handler(thread_list)#判断首页贴子进行处理
+        for thread in thread_list[:once_scan_num]:
+            post_task_queue.put(thread)
+            comment_task_queue.put(thread)
+        time.sleep(100/threading_num)
 def post_spider():
     while True:
         thread = post_task_queue.get()
@@ -272,13 +280,14 @@ comment_num = {}#用来储存pid对应楼中楼层数
 is_failed = []#储存一个post是否删除失败过
 is_succeed = []#储存一个post是否删除成功过
 #以上dict均以贴子pid作为key值
-cycle = 0 #循环次数
 work_thread_list = []
 post_task_queue = queue.Queue()
 comment_task_queue = queue.Queue()
 posts_queue = queue.Queue()
 comments_queue = queue.Queue()
-
+#爬首页线程
+ts = threading.Thread(target=thread_spider,args=(),name="thread_spider")
+work_thread_list.append(ts)
 #爬贴子线程
 for i in range(threading_num):
     ps = threading.Thread(target=post_spider,args=(),name="post_spider")
@@ -300,19 +309,10 @@ while True:
     #更新关键词信息
     from keywords import *
     from author_keywords import *
-
-    thread_list = tiebalib.get_thread_list(aim_tieba)#爬取首页贴子
-    thread_handler(thread_list)#判断首页贴子进行处理
-
-    for thread in thread_list[:once_scan_num]:
-        post_task_queue.put(thread)
-        comment_task_queue.put(thread)
-
-    time.sleep(100/threading_num)
-    cycle += 1
     #重启退出进程
     for index, work_thread in enumerate(work_thread_list):
         if not work_thread.isAlive():
             new_thread = threading.Thread(target=locals()[work_thread.name],args=(),name=work_thread.name)
             work_thread_list[index] = new_thread
             new_thread.start()
+    time.sleep(2)
