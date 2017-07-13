@@ -5,7 +5,7 @@
 ## 使用方法
 * 安装依赖 `pip3 install jieba beautifulsoup4`
 
-* 在`config.py`中填入目标贴吧与具有管理权限的账号的贴吧Cookie，并按照说明配置相应参数
+* 在`config.py`中填入目标贴吧与具有管理权限的账号的贴吧Cookie，或者填入贴吧账号与密码，并按照说明配置相应参数
 
 * 按照需求按格式在`keywords.py`、`author_keywords.py`中添加关键词。
 
