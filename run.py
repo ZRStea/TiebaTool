@@ -271,6 +271,15 @@ sh.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(sh)
 
+# 使用帐号密码登陆获取到cookie
+cookie_for_selenium = tiebalib.get_cookie_by_selenium(username, password)
+if tiebalib.try_cookie_logined(cookie_for_selenium):
+    cookie = cookie_for_selenium
+    print(cookie)
+else:
+    logger.warning("通过selenium获取cookie失败,将使用config中的cookie")
+
+
 # socket.setdefaulttimeout(15)
 
 tiebalib.initialize(aim_tieba,cookie)
