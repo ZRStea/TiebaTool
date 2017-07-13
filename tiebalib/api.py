@@ -11,6 +11,7 @@ import jieba
 import math
 import sys
 import logging
+from selenium import webdriver
 
 fh = logging.FileHandler('error.log')
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s","%Y-%m-%d %H:%M:%S")
@@ -50,23 +51,27 @@ def get_fid():
         return 0
 
 def get_thread_list(aim_tieba = data.aim_tieba,pn=0):
-    threads = []
-    payload = {'pn':pn, 'ie':'utf-8'}
-    headers = {'Cookie':data.cookie,'User-Agent':data.UA}
-    content = requests.get('http://tieba.baidu.com/f?kw='+data.aim_tieba,params=payload, headers=headers).text
-    raws = re.findall('thread_list clearfix([\s\S]*?)创建时间"',content)
-    for raw in raws:
-        tid = re.findall('href="/p/(.*?)"', raw)
-        pid = re.findall('&quot;first_post_id&quot;:(.*?),', raw)
-        topic = re.findall('href="/p/.*?" title="([\s\S]*?)"', raw)
-        author = re.findall('title="主题作者: (.*?)"', raw)
-        reply_num = re.findall('&quot;reply_num&quot;:(.*?),',raw)
-        #print(len(tid),len(pid),len(topic),len(author),len(reply_num))
-        if len(tid)==len(pid)==len(topic)==len(author)==len(reply_num):
-            dic = {"tid":tid[0],"pid":pid[0],"topic":topic[0],"author":author[0],"reply_num":reply_num[0]}
-            threads.append(dic)
-    if threads == []:
-        log.warning("获取首页失败")
+    try:
+        threads = []
+        payload = {'pn':pn, 'ie':'utf-8'}
+        headers = {'Cookie':data.cookie,'User-Agent':data.UA}
+        content = requests.get('http://tieba.baidu.com/f?kw='+data.aim_tieba,params=payload, headers=headers).text
+        raws = re.findall('thread_list clearfix([\s\S]*?)创建时间"',content)
+        for raw in raws:
+            tid = re.findall('href="/p/(\d*)', raw)
+            pid = re.findall('&quot;first_post_id&quot;:(.*?),', raw)
+            topic = re.findall('href="/p/.*?" title="([\s\S]*?)"', raw)
+            nickname = re.findall('title="主题作者: (.*?)"', raw)
+            reply_num = re.findall('&quot;reply_num&quot;:(.*?),',raw)
+            username = re.findall('''frs-author-name-wrap"><a data-field='{&quot;un&quot;:&quot;(.*?)&quot;}''',raw)
+            if len(tid)==len(pid)==len(topic)==len(username)==len(reply_num):
+                dic = {"tid":tid[0],"pid":pid[0],"topic":topic[0],"author":username[0].encode('utf-8').decode('unicode_escape'),"reply_num":reply_num[0],"nickname":nickname[0]}
+                threads.append(dic)
+        if threads == []:
+            log.warning("获取首页失败")
+    except Exception:
+        log.exception("Exception Logged")
+        return []
     return threads
 
 def get_post(tid,pn=9999):
@@ -198,4 +203,37 @@ def delete_thread(tid):#管理工具删整贴接口
     r = requests.post(url, data = payload, headers = headers)
     status = json.loads(r.text)
     return status
+
+
+def try_cookie_logined(cookie):# 测试cookie是否可用
+    TbsUrl = 'http://tieba.baidu.com/dc/common/tbs'
+    headers = {"Cookie":cookie}
+    tbs_json = requests.get(TbsUrl, headers = headers)
+    tbs_json = json.loads(tbs_json.text)
+    return True if tbs_json['is_login'] == 1 else False
+
+def get_cookie_by_selenium(username, password): # 获取Cookies
+    url = 'https://passport.baidu.com/v2/?login'
+    # 如果没有加入环境变量，需要指定具体的位置
+    # driver = webdriver.Chrome(executable_path='/Users/resolvewang/Documents/program/driver/chromedriver')
+    driver = webdriver.Chrome()
+    driver.get(url)
+    log.info('开始登录')
+
+    name_field = driver.find_element_by_id('TANGRAM__PSP_3__userName')
+    name_field.send_keys(username)
+    time.sleep(1)
+    passwd_field = driver.find_element_by_id('TANGRAM__PSP_3__password')
+    passwd_field.send_keys(password)
+    time.sleep(1)
+    login_button = driver.find_element_by_id('TANGRAM__PSP_3__submit')
+    login_button.click()
+    time.sleep(5)
+    #return driver.get_cookie("BDUSS")
+    login_cookie = ''
+    for cookie in driver.get_cookies():
+        login_cookie += cookie['name'] + '=' + cookie['value'] + ';'
+    driver.quit()
+    return login_cookie if try_cookie_logined(login_cookie) else log.warning("登陆失败")
+
 
