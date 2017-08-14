@@ -114,9 +114,9 @@ def judge_comment(comment_list):
                         comment["result"][1] += 1
                     comment["reason"].append("ID关键词："+dic["author"])
     except TypeError:
-            logger.info("TypeError:" + str(comment))
+        logger.info("TypeError:" + str(comment))
     except Exception as e:
-            logger.info("Error:" + str(comment) + str(e))
+        logger.info("Error:" + str(comment) + str(e))
     return comment_list
 def thread_spider():
     while True:
