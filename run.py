@@ -1,6 +1,5 @@
 import tiebalib
 import logging
-import json
 import math
 import threading
 import queue
@@ -8,7 +7,7 @@ import re
 import time
 import itertools
 import jieba
-# import socket
+from collections import Counter
 
 def judge_thread(thread_list):
     for thread in thread_list:
@@ -230,36 +229,23 @@ def comment_handler():
 def calculate_similarity(text1,text2):
     raw1 = jieba.cut(text1)
     raw2 = jieba.cut(text2)
-    dict1 ={}
-    dict2 ={}
-    for i in raw1:
-        if i not in dict1:
-            dict1[i] = 1
-        else:
-            dict1[i] +=1
-    for i in raw2:
-        if i not in dict2:
-            dict2[i] = 1
-        else:
-            dict2[i] +=1
-    for i in dict1:
-        if i not in dict2:
-            dict2[i] = 0
-    for i in dict2:
-        if i not in dict1:
-            dict1[i] = 0
-    mod1 = mod2 = 0
-    for i in dict1:
-        mod1 += dict1[i]*dict1[i]
-    for i in dict2:
-        mod2 += dict2[i]*dict2[i]
-    dot_product = 0
-    for i in dict1:
-        dot_product += dict1[i]*dict2[i]
-    if mod1*mod2 != 0:
-        similarity = dot_product/(math.sqrt(mod1*mod2))
-    else:similarity = 0
-    return similarity
+    raw1 = Counter(raw1)
+    raw2 = Counter(raw2)
+    same_words = set(raw1) & set(raw2)
+    if (math.sqrt(len(raw1)) * math.sqrt(len(raw2))) != 0:
+        dot_product = 0
+        mod1 = 0
+        mod2 = 0
+        for word in same_words:
+            dot_product += raw1[word] * raw2[word]
+        for word in raw1:
+            mod1 += math.pow(raw1[word],2)
+        for word in raw2:
+            mod2 += math.pow(raw2[word],2)
+        cos = dot_product/math.sqrt(mod1*mod2)
+    else:
+        cos = 0
+    return cos
 
 from config import *
 
