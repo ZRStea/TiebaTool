@@ -93,6 +93,8 @@ def judge_post(post_list):
             post["result"][0] += 1
             post["result"][1] += 1
             post["reason"].append("表情数量超出限制")
+        if post["author"] in whitelist:
+            post["result"] = [0,0]
     return post_list
 def judge_comment(comment_list):
     try:
@@ -113,6 +115,8 @@ def judge_comment(comment_list):
                     if dic["block"]:
                         comment["result"][1] += 1
                     comment["reason"].append("ID关键词："+dic["author"])
+            if comment["user_name"] in whitelist:
+                comment["result"] = [0,0]
     except TypeError:
         logger.info("TypeError:" + str(comment))
     except Exception as e:
@@ -318,6 +322,7 @@ while True:
     #更新关键词信息
     from keywords import *
     from author_keywords import *
+    from whitelist import *
     #重启退出进程
     for index, work_thread in enumerate(work_thread_list):
         if not work_thread.isAlive():
