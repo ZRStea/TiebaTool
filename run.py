@@ -125,7 +125,7 @@ def thread_spider():
         for thread in thread_list[:once_scan_num]:
             post_task_queue.put(thread)
             comment_task_queue.put(thread)
-        time.sleep(100/threading_num)
+        time.sleep(spider_sleeptime)
 def post_spider():
     while True:
         thread = post_task_queue.get()
