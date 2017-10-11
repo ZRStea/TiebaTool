@@ -263,8 +263,9 @@ logger.addHandler(sh)
 
 # 使用帐号密码登陆获取到cookie
 if enable_login_model:
-    cookie_for_selenium = tiebalib.get_cookie_by_selenium(username, password)
-    if tiebalib.try_cookie_logined(cookie_for_selenium):
+    import tiebalib.login_model
+    cookie_for_selenium = tiebalib.login_model.get_cookie_by_selenium(username, password)
+    if tiebalib.login_model.try_cookie_logined(cookie_for_selenium):
         cookie = cookie_for_selenium
         print(cookie)
     else:
