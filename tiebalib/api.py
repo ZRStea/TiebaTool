@@ -120,6 +120,7 @@ def get_post(tid,pn=9999):
             # post["sex"] = t["author"]["user_sex"]
             # post["exp"] = t["author"]["cur_score"]
             # post["level"] = t["author"]["level_id"]
+            post["level"] = post_raw[1].find('div',attrs={'class':'d_badge_lv'}).text
             post["pid"] = t["content"]["post_id"]
             # post["date"] = t["content"]["date"]
             # post["voice"] = t["content"]["ptype"]
