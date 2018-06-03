@@ -62,7 +62,7 @@ def get_thread_list(aim_tieba = data.aim_tieba,pn=0):
             topic = re.findall('href="/p/.*?" title="([\s\S]*?)"', raw)
             nickname = re.findall('title="主题作者: (.*?)"', raw)
             reply_num = re.findall('&quot;reply_num&quot;:(.*?),',raw)
-            username = re.findall('''frs-author-name-wrap"><a data-field='{&quot;un&quot;:&quot;(.*?)&quot;}''',raw)
+            username = re.findall('''frs-author-name-wrap"><a rel="noreferrer"  data-field='{&quot;un&quot;:&quot;(.*?)&quot;}''',raw)
             if len(tid)==len(pid)==len(topic)==len(username)==len(reply_num):
                 dic = {"tid":tid[0],"pid":pid[0],"topic":topic[0],"author":username[0].encode('utf-8').decode('unicode_escape'),"reply_num":reply_num[0],"nickname":nickname[0]}
                 threads.append(dic)
@@ -80,8 +80,11 @@ def get_post(tid,pn=9999):
         raw = requests.get(url, params={'pn':pn}, headers=headers).text
         post_list = []
         content =BeautifulSoup(raw,'html.parser')
-        author_info = content.find_all("div",class_=re.compile("l_post"))
-        texts = content.find_all("div",class_=re.compile("j_d_post_content"))
+        # author_info = content.find_all("div",class_=re.compile("l_post l_post_bright j_l_post clearfix "))
+        author_info = content.find_all("div",attrs={"class":"l_post l_post_bright j_l_post clearfix "})
+        # texts = content.find_all("div",class_=re.compile("d_post_content j_d_post_content "))
+        texts = content.find_all("div",class_=re.compile("d_post_content j_d_post_content "))
+
         if not texts:
             log.warning("抓取贴子:"+tid+" 失败,正则未匹配到贴子信息")
             return []#抓不到返回空list
@@ -114,14 +117,15 @@ def get_post(tid,pn=9999):
             post["tid"] = tid
             post["author"] = t["author"]["user_name"]
             post["uid"] = t["author"]["user_id"]
-            post["sex"] = t["author"]["user_sex"]
-            post["exp"] = t["author"]["cur_score"]
-            post["level"] = t["author"]["level_id"]
+            # post["sex"] = t["author"]["user_sex"]
+            # post["exp"] = t["author"]["cur_score"]
+            # post["level"] = t["author"]["level_id"]
+            post["level"] = post_raw[1].find('div',attrs={'class':'d_badge_lv'}).text
             post["pid"] = t["content"]["post_id"]
-            post["date"] = t["content"]["date"]
-            post["voice"] = t["content"]["ptype"]
+            # post["date"] = t["content"]["date"]
+            # post["voice"] = t["content"]["ptype"]
             post["floor"] = t["content"]["post_no"]
-            post["device"] = t["content"]["open_type"]
+            # post["device"] = t["content"]["open_type"]
             post["comment_num"] = t["content"]["comment_num"]
             post["sign"] = post_info[2]
             post["imgs"] = post_info[3]
